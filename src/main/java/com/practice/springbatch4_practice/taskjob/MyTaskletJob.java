@@ -1,4 +1,4 @@
-package com.practice.springbatch4_practice.config;
+package com.practice.springbatch4_practice.taskjob;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
@@ -12,37 +12,48 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Configuration
 @RequiredArgsConstructor
-public class TaskletJob {
+public class MyTaskletJob {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
 
-    private String JOB_NAME = "testTaskMyJob";
+    private String JOB_NAME = "tasklet_Job";
 
     @Bean
-    public Job testTaskMyJob() {
+    public Job taskletJob() {
         return jobBuilderFactory.get(JOB_NAME)
-                .start(testStep())
+                .start(anonymousTaskletStep())
+                .next(lambdaTaskletStep())
+                .next(customTaskletStep())
                 .build();
     }
 
     @Bean
-    public Step testStep() {
-        return stepBuilderFactory.get("step1")
+    public Step anonymousTaskletStep() {
+        return stepBuilderFactory.get("anonymousTaskletStep")
                 .tasklet(new Tasklet() {
                     @Override
                     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-                        List<String> items = new ArrayList<>();
-                        for (int i = 1; i <= 100; i++) {
-                            items.add("No." + i);
-                        }
-                        System.out.println(items);
+                        System.out.println("익명 클래스(Anonymous Class) 사용");
                         return RepeatStatus.FINISHED;
                     }
                 }).build();
+    }
+
+    @Bean
+    public Step lambdaTaskletStep() {
+        return stepBuilderFactory.get("lambdaTaskletStep")
+                .tasklet((contribution, chunkContext) -> {
+                    System.out.println("람다(Lambda) 사용");
+                    return RepeatStatus.FINISHED;
+                }).build();
+    }
+
+    @Bean
+    public Step customTaskletStep() {
+        return stepBuilderFactory.get("customTaskletStep")
+                .tasklet(new CustomTasklet())
+                .build();
     }
 }
